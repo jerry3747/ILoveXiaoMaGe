@@ -1,1 +1,16 @@
-itchat.kpl
+*.log
+*.py[cod]
+*.so
+*.egg
+*.egg-info
+.idea/
+dist
+build
+*.pkl
+
+db.ini
+deploy_key_rsa
+
+Thumbs.db
+ehthumbs.db
+Desktop.ini
