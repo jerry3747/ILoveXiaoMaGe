@@ -31,15 +31,14 @@ def say_good_night(lz):
 
 
 def get_tuling_response(_info):
-    api_url = 'http://www.tuling123.com/openapi/api'
+    api_url = tuling_url
     data ={
-        'key':'5ab195ed4f244afdadb35bb2c898ace7',#自行注册获得
+        'key':tuling_key,#自行注册获得
         'info':_info,
         'userid':'haha'
     }
     # 发送数据到指定网址，获取网址返回的数据
     res = requests.post(api_url,data).json()
-    #print(res,type(res))
     # 给用户返回的内容
     return res['text']
 
@@ -69,7 +68,7 @@ if __name__ == "__main__":
     if auto_response_enable:
         itchat.run()
     # 根据好友昵称查找好友的信息,返回值是一个列表，有多个元素
-    res = itchat.search_friends('港岛妹妹')
+    res = itchat.search_friends(friend)
     # 通过索引获取该好友的详细信息
     lz = res[0]['UserName']
     # 每天早中晚定时骚扰
