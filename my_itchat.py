@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 __author__ = 'Jerry'
+import logging
 import random
 import time
 import json
@@ -8,6 +9,9 @@ import itchat
 import schedule
 import requests
 from config import *
+from threading import Thread
+
+sig = 1
 
 
 def say_good_morning(lz):
@@ -62,8 +66,63 @@ def say_love():
     return word
 
 
-if __name__ == "__main__":
-    itchat.auto_login(hotReload = True)
+def logout():
+    """
+    登录时间过长会自动退出，退出之后sig置0
+    :return:
+    """
+    global sig
+    sig = 0
+
+
+def login(img_data):
+    """
+    将二维码通过邮件发送到手机，然后手机扫码登录
+    :param img_data:
+    :return:
+    """
+    from email_send import EmailSender
+    email_client = EmailSender()
+    to_email = [receive]
+    img = img_data
+    text = '微信登录二维码'
+    subject = '微信登录二维码'
+    email_client.send_email(to_email, subject, text = text, image = img)
+
+
+def open_image():
+    while True:
+        try:
+            with open('./QR.png', 'rb') as f:
+                img_data = f.read()
+                if img_data:
+                    login(img_data)
+        except BaseException as e:
+            continue
+        finally:
+            time.sleep(60)
+
+def check_sig():
+    """
+    检查登录状态，如果退出了就重新登录
+    :return:
+    """
+    if sig:
+        pass
+    else:
+        main()
+
+def run_check_sig():
+    """
+    每隔八个小时候检查一下登录状态
+    :return:
+    """
+    schedule.every(8).hours.do(check_sig)
+    while True:
+        schedule.run_pending()
+
+def main():
+    itchat.auto_login(hotReload = True, exitCallback = logout)
     # 开启自动回复
     if auto_response_enable:
         itchat.run()
@@ -72,11 +131,18 @@ if __name__ == "__main__":
     # 通过索引获取该好友的详细信息
     lz = res[0]['UserName']
     # 每天早中晚定时骚扰
-    schedule.every().day.at('08:00').do(say_good_morning,lz)
-    schedule.every().day.at('12:00').do(eat_something,lz)
-    schedule.every().day.at('23:59').do(say_good_night,lz)
+    schedule.every().day.at('08:00').do(say_good_morning, lz)
+    # schedule.every().day.at('12:00').do(eat_something, lz)
+    # schedule.every().day.at('23:59').do(say_good_night, lz)
     while True:
         schedule.run_pending()
+
+
+if __name__ == "__main__":
+    task = [main, open_image, run_check_sig]
+    for func in task:
+        p = Thread(target = func)
+        p.start()
 
 
 
